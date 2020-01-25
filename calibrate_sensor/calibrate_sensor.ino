@@ -6,7 +6,7 @@
  * 
  * The mean and standard deviation of the raw analogRead counts are scrolled to the serial port:
  * place an object at the desired distance to the sensor, record the mean value of the raw data, and repeat for 
- * different object distances. This will produce a table of raw counts vs distance. A curve-fitting routing is then
+ * different object distances. This will produce a table of raw counts vs distance. A curve-fitting routine is then
  * applied (typically a 5th-order polynomial) to associate the raw analogRead counts to the desired distance units. 
  * 
  */
