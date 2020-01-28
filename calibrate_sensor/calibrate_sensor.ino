@@ -11,7 +11,7 @@
  * 
  */
 
-const int N = 100; // number of measurements to average
+const int N = 200; // number of measurements to average
 float sum   = 0;
 float sumsq = 0;
 int   n     = 0;
@@ -26,7 +26,7 @@ void setup() {
 void loop() {
   
   int val = analogRead(A0);
-  delay(17);
+  //delay(1);
 
   sum   += val;
   sumsq += float(val) * float(val); 
@@ -36,9 +36,9 @@ void loop() {
     mean   = sum/float(n);
     stddev = sqrt(sumsq/float(n) - mean * mean);
     Serial.print("Mean: ");
-    Serial.print(mean);
+    Serial.print(int(mean));
     Serial.print("  Stddev: ");
-    Serial.println(stddev);
+    Serial.println(int(stddev));
     delay(10);
     n     = 0;
     sum   = 0;
