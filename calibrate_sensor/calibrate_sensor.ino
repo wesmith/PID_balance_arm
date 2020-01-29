@@ -11,7 +11,7 @@
  * 
  */
 
-const int N = 200; // number of measurements to average
+const int N = 500; // number of measurements to average
 float sum   = 0;
 float sumsq = 0;
 int   n     = 0;
@@ -39,7 +39,7 @@ void loop() {
     Serial.print(int(mean));
     Serial.print("  Stddev: ");
     Serial.println(int(stddev));
-    delay(10);
+    delay(100);
     n     = 0;
     sum   = 0;
     sumsq = 0;
