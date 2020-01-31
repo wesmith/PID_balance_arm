@@ -62,16 +62,11 @@ int get_distance(int analog) {  // WS version, using linear LUT
 
 float get_dist(int n) {  // elecronoobs version, using exponential model
   long sum=0;
-  for(int i=0;i<n;i++)
-  {
+  for(int i=0;i<n;i++) {
     sum=sum+analogRead(A0);
   }  
   float adc=sum/n;
-  //float volts = analogRead(adc)*0.0048828125;  // value from sensor * (5/1024)
-  //float volts = sum*0.003222656;  // value from sensor * (3.3/1024) EXTERNAL analog refference
-
   float distance_mm = 10.0 * 17569.7 * pow(adc, -1.2062);  // WS changed to mm, multiply by 10.0
-  //float distance_cm = 13*pow(volts, -1); 
   return(distance_mm);
 }
 
@@ -86,6 +81,13 @@ void print_LUT() {
   }
 }
 
+void waitForSerial() {
+  while(Serial.available()){Serial.read();}
+  while (!Serial.available()) { }
+  Serial.println(Serial.read());
+  Serial.println("");
+}
+
 void setup() {
   Serial.begin(9600);
   create_LUT();
@@ -97,37 +99,45 @@ void setup() {
 void loop() {
 
   if (npts == NDATA) {
-    Serial.print("number of measurements per distance value is ");
+    Serial.print("num of analogReads per sample: ");
     Serial.println(NMEAS);
-    Serial.println("Histogram follows: only non-zero bins are shown");
+    Serial.print("num of samples: ");
+    Serial.println(NDATA);
+    Serial.println("Histo: only non-zero bins are shown");
     for (int i = 0; i <= NBINS; i++) {
       if (hist[i] >= 1){
         Serial.print("i = ");
         Serial.print(i);
         Serial.print("  hist(i) = ");
         Serial.println(hist[i]); 
+        hist[i] = 0; // get ready for next histogram
       }
     }
     hist_mean /= float(NDATA);
     hist_mnsq /= float(NDATA);
     hist_stdd = sqrt(hist_mnsq - hist_mean * hist_mean);
     analog_mean /= (float(NDATA) * float(NMEAS));  // debug
-    Serial.print("Histogram mean (ie, distance using the LUT): ");
-    Serial.println(hist_mean);
-    //Serial.print("hist_mnsq diagnostic ");
-    //Serial.println(hist_mnsq);
-    Serial.print("Histogram stddev (ie, stddev of distance): ");
+    Serial.print("LUT          distance: ");
+    Serial.print(hist_mean);
+    Serial.print("   stddev: ");
     Serial.println(hist_stdd);
-    Serial.print("Analog mean: ");
-    Serial.println(analog_mean);
 
     Serial.print("Electronoobs distance: ");
     float noobs_dist = get_dist(NMEAS);
     Serial.println(noobs_dist);
 
+    Serial.print("Analog mean: ");
+    Serial.println(analog_mean);
+
     
-    delay(500);
-    exit(0); // exit the loop
+    Serial.println("");
+    Serial.print("enter any key:");
+    waitForSerial();
+    hist_mean = 0;
+    hist_mnsq = 0;
+    npts      = 0;
+    
+    //exit(0); // exit the loop
   }
 
   int analog = analogRead(A0);
