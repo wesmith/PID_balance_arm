@@ -11,17 +11,18 @@
 
 // can tweak the 9 values below to get more accurate distances: did this by hand (original commented out)
 //const float MEANS[] = {465.3, 290.0, 218.7, 194.3, 186.3, 179.0, 170.0, 159.3, 146.7};  // raw analogRead() values
-const float MEANS[] =   {465.3, 290.0, 218.7, 196.0, 193.0, 179.0, 170.0, 159.3, 146.7};  // TWEAKED values
+const float MEANS[] =   {479.0, 375.0, 306.0, 259.0, 220.0, 196.0, 183.0, 172.0, 172.0};  // TWEAKED values
 const float DIST[]  =   {100.0, 150.0, 200.0, 250.0, 300.0, 350.0, 400.0, 450.0, 500.0};  // dist in mm
-
+// NOTE with sensor/slide configuration on 02/01/20, after 450mm the analogRead value doesn't change
 
 const int N = 9; // number of calibration values
-const int START = 147;  // lowest  analogRead() value for calibration
-const int STOP  = 465;  // highest analogRead() value for calibration
-int LUT[319];
+const int START = 172; //147;  // lowest  analogRead() value for calibration
+const int STOP  = 475; //465;  // highest analogRead() value for calibration
+int LUT[304]; //LUT[319];
 
-const int NBINS = 350;
-int   hist[351] = {0}; // histogram array, just out to NBINS (note: have to reduce this if too much global mem used)
+const int NBINS = 400; //350;
+// histogram array, just out to NBINS (note: have to reduce this if too much global mem used)
+int   hist[401] = {0}; //hist[351] = {0};
 float hist_mean = 0;   // mean of the histogram
 float hist_mnsq = 0;   // used to calculate stddev of histogram
 float hist_stdd = 0;   // stddev of the histogram
