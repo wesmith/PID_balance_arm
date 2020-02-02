@@ -2,18 +2,23 @@
  * 
  * WESmith 01/29/20
  * 
- * test distance sensors using calibration data obtained with assistance from calibrate_sensor.ino
- * 
+ * test distance sensors using calibration data obtained from calibrate_sensor.ino
+ * NOTE: values can be tweaked in real-time using this code: see modified MEANS array below. 
  */
 // calibration data for the GP2Y0A21YKOF IR sensor: 
 // white ping-pong ball on slide, distance from sensor to front of ping-pong ball in mm
 // analogRead() values in MEANS array below found in fit_sensor.ipynb (before tweaking)
 
-// can tweak the 9 values below to get more accurate distances: did this by hand (original commented out)
-//const float MEANS[] = {465.3, 290.0, 218.7, 194.3, 186.3, 179.0, 170.0, 159.3, 146.7};  // raw analogRead() values
-const float MEANS[] =   {479.0, 375.0, 306.0, 259.0, 220.0, 196.0, 183.0, 172.0, 172.0};  // TWEAKED values
-const float DIST[]  =   {100.0, 150.0, 200.0, 250.0, 300.0, 350.0, 400.0, 450.0, 500.0};  // dist in mm
-// NOTE with sensor/slide configuration on 02/01/20, after 450mm the analogRead value doesn't change
+// can tweak the 9 values below to get more accurate distances: did this by hand 
+// (original commented out)
+// raw analogRead() values
+//const float MEANS[] = {465.3, 290.0, 218.7, 194.3, 186.3, 179.0, 170.0, 159.3, 146.7}; 
+// TWEAKED values
+const float MEANS[] =   {479.0, 375.0, 306.0, 259.0, 220.0, 196.0, 183.0, 172.0, 172.0}; 
+// dist in mm
+const float DIST[]  =   {100.0, 150.0, 200.0, 250.0, 300.0, 350.0, 400.0, 450.0, 500.0};
+// NOTE with sensor/slide configuration on 02/01/20, after 450mm the analogRead value 
+//      doesn't change
 
 const int N = 9; // number of calibration values
 const int START = 172; //147;  // lowest  analogRead() value for calibration
@@ -44,7 +49,8 @@ void create_LUT() {
   for (int i = START; i <= STOP; i++) {
     for (int j = 0; j < (N-1); j++) {
       if ((i < MEANS[j]) && (i >= MEANS[j+1])) {
-        LUT[i-START] = (int)((i - MEANS[j]) * (DIST[j+1] - DIST[j]) / (MEANS[j+1] - MEANS[j]) + DIST[j] + 1); 
+        LUT[i-START] = (int)((i - MEANS[j]) * (DIST[j+1] - DIST[j]) / (MEANS[j+1] - MEANS[j]) 
+                             + DIST[j] + 1); 
         break;
       }
     }
@@ -67,7 +73,8 @@ float get_dist(int n) {  // elecronoobs version, using exponential model
     sum=sum+analogRead(A0);
   }  
   float adc=sum/n;
-  float distance_mm = 10.0 * 17569.7 * pow(adc, -1.2062);  // WS changed to mm, multiply by 10.0
+  // WS changed to mm, multiply by 10.0
+  float distance_mm = 10.0 * 17569.7 * pow(adc, -1.2062); 
   return(distance_mm);
 }
 
