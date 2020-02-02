@@ -5,25 +5,11 @@
  * test distance sensors using calibration data obtained from calibrate_sensor.ino
  * NOTE: values can be tweaked in real-time using this code: see modified MEANS array below. 
  */
-// calibration data for the GP2Y0A21YKOF IR sensor: 
-// white ping-pong ball on slide, distance from sensor to front of ping-pong ball in mm
-// analogRead() values in MEANS array below found in fit_sensor.ipynb (before tweaking)
 
-// can tweak the 9 values below to get more accurate distances: did this by hand 
-// (original commented out)
-// raw analogRead() values
-//const float MEANS[] = {465.3, 290.0, 218.7, 194.3, 186.3, 179.0, 170.0, 159.3, 146.7}; 
-// TWEAKED values
-const float MEANS[] =   {479.0, 375.0, 306.0, 259.0, 220.0, 196.0, 183.0, 172.0, 172.0}; 
-// dist in mm
-const float DIST[]  =   {100.0, 150.0, 200.0, 250.0, 300.0, 350.0, 400.0, 450.0, 500.0};
-// NOTE with sensor/slide configuration on 02/01/20, after 450mm the analogRead value 
-//      doesn't change
+#include "IR_sensor.h"
 
-const int N = 9; // number of calibration values
-const int START = 172; //147;  // lowest  analogRead() value for calibration
-const int STOP  = 475; //465;  // highest analogRead() value for calibration
-int LUT[304]; //LUT[319];
+const byte sensor_pin = A0;
+DistSensor sensor1(DistSensor::GP2Y0A21YK0F_5V, sensor_pin);
 
 const int NBINS = 400; //350;
 // histogram array, just out to NBINS (note: have to reduce this if too much global mem used)
@@ -43,30 +29,6 @@ float mean;
 float stddev;
 float analog_mean; // debug
 
-
-void create_LUT() {
-// LUT incorporating linear interpolation: polynomial fits were problematic with this data
-  for (int i = START; i <= STOP; i++) {
-    for (int j = 0; j < (N-1); j++) {
-      if ((i < MEANS[j]) && (i >= MEANS[j+1])) {
-        LUT[i-START] = (int)((i - MEANS[j]) * (DIST[j+1] - DIST[j]) / (MEANS[j+1] - MEANS[j]) 
-                             + DIST[j] + 1); 
-        break;
-      }
-    }
-  }
-}
-
-int get_distance(int analog) {  // WS version, using linear LUT
-  // analog is the analogRead() value from arduino
-  // output distance is in mm
-  int indx     = analog - START;
-  int maxIndx  = STOP   - START; 
-  if (indx < 0) {indx = 0;}
-  if (indx > maxIndx) {indx = maxIndx;}
-  return LUT[indx];
-}
-
 float get_dist(int n) {  // elecronoobs version, using exponential model
   long sum=0;
   for(int i=0;i<n;i++) {
@@ -84,7 +46,7 @@ void print_LUT() {
     Serial.print("i = ");
     Serial.print(i);
     Serial.print("  LUT(i) = ");
-    Serial.println(get_distance(i));
+    Serial.println(sensor1.getDist());
     delay(100);
   }
 }
@@ -98,13 +60,13 @@ void waitForSerial() {
 
 void setup() {
   Serial.begin(9600);
-  create_LUT();
-  Serial.println("Created LUT");
   //delay(500);
   //print_LUT();
 }
 
 void loop() {
+
+  int val = sensor1.getDist(20);
 
   if (npts == NDATA) {
     Serial.print("num of analogReads per sample: ");
@@ -148,9 +110,6 @@ void loop() {
     //exit(0); // exit the loop
   }
 
-  int analog = analogRead(A0);
-  analog_mean += analog;  // debug
-  int val    = get_distance(analog);
 
   //delay(1);
 
