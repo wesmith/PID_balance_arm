@@ -8,6 +8,10 @@ DistSensor::DistSensor(const sensors sensor, const byte pin) {
   create_LUT();
 }
 
+
+
+
+
 void DistSensor::create_LUT() {
 // LUT incorporating linear interpolation: polynomial fits were problematic with this data
 // (not generalized to different sensors yet: 'sensor' not used at present)

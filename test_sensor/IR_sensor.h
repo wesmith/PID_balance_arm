@@ -14,6 +14,7 @@
 // raw analogRead() values
 //const float MEANS[] = {465.3, 290.0, 218.7, 194.3, 186.3, 179.0, 170.0, 159.3, 146.7}; 
 // TWEAKED values
+// put these into PROGMEM to save RAM?
 const float MEANS[] =   {479.0, 379.0, 310.0, 259.0, 220.0, 196.0, 192.0, 184.0, 183.0}; 
 // dist in mm
 const float DIST[]  =   {100.0, 150.0, 200.0, 250.0, 300.0, 350.0, 370.0, 390.0, 400.0};
@@ -28,6 +29,7 @@ const int STOP  = 479; //465;  // highest analogRead() value for calibration
 class DistSensor {
   
 public:
+
   enum sensors {
     GP2Y0A21YK0F_5V,
     GP2Y0A60SZLF_5V
@@ -43,8 +45,13 @@ public:
   void get_dist(unsigned int &analog, unsigned int &dist, int number = 1);
 
 private:
+
   byte _pin;
+  //int   _num_pts = 9;
+  //float _analog[9];
+  //float _dist[9];
   sensors _sensor;
+  
   void create_LUT();
 };
 
