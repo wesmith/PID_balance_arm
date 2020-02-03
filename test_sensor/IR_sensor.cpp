@@ -1,6 +1,6 @@
 #include "IR_sensor.h"
 
-unsigned int LUT[308]; // LUT size is STOP - START + 1  // had to put this here: didn't compile in .h
+unsigned int LUT[297]; // LUT size is STOP - START + 1  // had to put this here: didn't compile in .h
 
 DistSensor::DistSensor(const sensors sensor, const byte pin) {
   _pin    = pin;
@@ -15,23 +15,33 @@ void DistSensor::create_LUT() {
     for (int j = 0; j < (N-1); j++) {
       if ((i < MEANS[j]) && (i >= MEANS[j+1])) {
         LUT[i-START] = (int)((i - MEANS[j]) * (DIST[j+1] - DIST[j]) / (MEANS[j+1] - MEANS[j]) 
-                            + DIST[j] + 1); 
+                            + DIST[j]); 
         break;
       }
     }
   }
+  LUT[STOP-START] = DIST[0]; // outlier missed in above loop
 }
 
-unsigned int DistSensor::getDist(int number = 1) {
-  unsigned int analog_mean = 0;
-  for (int i = 1; i = number; i++) {
-    unsigned int analog = analogRead(_pin);
-    analog_mean += analog;  
+void DistSensor::print_LUT() {
+  for (int i = START; i <= STOP; i++) {
+    Serial.print("i = ");
+    Serial.print(i);
+    Serial.print("  LUT(i - START) = ");
+    Serial.println(LUT[i - START]);
   }
-  analog_mean /= number;
-  unsigned int indx = analog_mean - START;
-  unsigned int maxIndx = STOP - START;
+}
+
+void DistSensor::get_dist(unsigned int &analog, unsigned int &dist, int number = 1) {
+  analog = 0;
+  for (int i = 1; i <= number; i++) {
+    unsigned int val = analogRead(_pin);
+    analog += val;  
+  }
+  analog /= number;
+  int indx = analog - START;  // this can go negative, so keep signed int
+  int maxIndx = STOP - START;
   if (indx < 0) {indx = 0;}
   if (indx > maxIndx) {indx = maxIndx;}
-  return LUT[indx];
+  dist = LUT[indx];
 }

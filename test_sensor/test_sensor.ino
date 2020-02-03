@@ -8,26 +8,24 @@
 
 #include "IR_sensor.h"
 
-const byte sensor_pin = A0;
-DistSensor sensor1(DistSensor::GP2Y0A21YK0F_5V, sensor_pin);
-
+const int NMEAS = 20;  // number of measurements to average for 1 point
+const int NDATA = 100; // number of points to collect for the histogram
 const int NBINS = 400; //350;
 // histogram array, just out to NBINS (note: have to reduce this if too much global mem used)
 int   hist[401] = {0}; //hist[351] = {0};
-float hist_mean = 0;   // mean of the histogram
-float hist_mnsq = 0;   // used to calculate stddev of histogram
-float hist_stdd = 0;   // stddev of the histogram
 
-const int NDATA = 100; // number of points to collect for the histogram
+const byte sensor_pin = A0;
+DistSensor sensor1(DistSensor::GP2Y0A21YK0F_5V, sensor_pin);
 
-const int NMEAS = 20; // number of measurements to average
-float sum   = 0;
-//float sumsq = 0;
-int   n     = 0;
-int   npts  = 0;
+float hist_mean   = 0;   // mean of the histogram
+float hist_mnsq   = 0;   // used to calculate stddev of histogram
+float hist_stdd   = 0;   // stddev of the histogram
+float analog_mean = 0;   // mean of the analog readings: useful for on-the-fly LUT analysis
+int   npts        = 0;
 float mean;
 float stddev;
-float analog_mean; // debug
+unsigned int analog;
+unsigned int dist;
 
 float get_dist(int n) {  // elecronoobs version, using exponential model
   long sum=0;
@@ -40,17 +38,6 @@ float get_dist(int n) {  // elecronoobs version, using exponential model
   return(distance_mm);
 }
 
-void print_LUT() {
-  // exceed legal bounds to test
-  for (int i = (START - 5); i < (STOP + 5); i++) {
-    Serial.print("i = ");
-    Serial.print(i);
-    Serial.print("  LUT(i) = ");
-    Serial.println(sensor1.getDist());
-    delay(100);
-  }
-}
-
 void waitForSerial() {
   while(Serial.available()){Serial.read();}
   while (!Serial.available()) { }
@@ -60,22 +47,33 @@ void waitForSerial() {
 
 void setup() {
   Serial.begin(9600);
-  //delay(500);
-  //print_LUT();
+  sensor1.print_LUT();
 }
 
 void loop() {
 
-  int val = sensor1.getDist(20);
+  sensor1.get_dist(analog, dist, NMEAS);
+  //Serial.print(analog);
+  //Serial.print("  ");
+  //Serial.println(dist);
 
+  // generate histogram
+  if (dist > NBINS) {dist = NBINS;}
+  hist[dist]  += 1;
+  hist_mean   += dist;
+  hist_mnsq   += (float)dist * (float)dist;
+  analog_mean += analog;
+  npts        += 1;
+
+  // print histogram
   if (npts == NDATA) {
-    Serial.print("num of analogReads per sample: ");
-    Serial.println(NMEAS);
-    Serial.print("num of samples: ");
+    Serial.print("analogReads per sample: ");
+    Serial.print(NMEAS);
+    Serial.print("  num of samples: ");
     Serial.println(NDATA);
-    Serial.println("Histo: only non-zero bins are shown");
+    Serial.println("Histo: non-zero bins");
     for (int i = 0; i <= NBINS; i++) {
-      if (hist[i] >= 1){
+      if (hist[i] > 0){
         Serial.print("i = ");
         Serial.print(i);
         Serial.print("  hist(i) = ");
@@ -86,57 +84,25 @@ void loop() {
     hist_mean /= float(NDATA);
     hist_mnsq /= float(NDATA);
     hist_stdd = sqrt(hist_mnsq - hist_mean * hist_mean);
-    analog_mean /= (float(NDATA) * float(NMEAS));  // debug
-    Serial.print("LUT          distance: ");
+    analog_mean /= float(NDATA);
+    Serial.print("LUT distance: ");
     Serial.print(hist_mean);
     Serial.print("   stddev: ");
-    Serial.println(hist_stdd);
-
-    Serial.print("Electronoobs distance: ");
-    float noobs_dist = get_dist(NMEAS);
-    Serial.println(noobs_dist);
-
-    Serial.print("Analog mean: ");
+    Serial.print(hist_stdd);
+    Serial.print("   analog mean: ");
     Serial.println(analog_mean);
 
+    //Serial.print("Electronoobs distance: ");
+    //float noobs_dist = get_dist(NMEAS);
+    //Serial.println(noobs_dist);
     
+    hist_mean   = 0;
+    hist_mnsq   = 0;
+    analog_mean = 0;
+    npts        = 0;
+
     Serial.println("");
-    Serial.print("enter any key:");
+    Serial.print("CR to continue:");
     waitForSerial();
-    hist_mean = 0;
-    hist_mnsq = 0;
-    npts      = 0;
-    
-    //exit(0); // exit the loop
   }
-
-
-  //delay(1);
-
-  sum   += val;
-  //sumsq += float(val) * float(val); 
-  n     += 1;
-
-  if (n == NMEAS) {
-    mean   = sum/float(n);
-    //stddev = sqrt(sumsq/float(n) - mean * mean);
-    int indx = (int)mean;
-    //Serial.print("indx ");
-    //Serial.println(indx);
-    if (indx > NBINS) {indx = NBINS;}
-    hist[indx] += 1;
-    hist_mean  += indx;
-    hist_mnsq  += (float)indx * (float)indx;
-    npts += 1;
-    /*
-    Serial.print("Mean: ");
-    Serial.print(int(mean));
-    Serial.print("  Stddev: ");
-    Serial.println(int(stddev));
-    delay(100);
-    */
-    n     = 0;
-    sum   = 0;
-    //sumsq = 0;
-    }
 }
