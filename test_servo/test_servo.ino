@@ -12,14 +12,19 @@ Servo myservo;
 
 int MINANG = 0; 
 int MAXANG = 172; // by experiment: anything higher causes chatter
+int INIT   = 90;  // 90 degrees
 int angle; 
 int val = 0;
 char txt[100];
 
 void setup()
 {
- Serial.begin( 9600 );
- myservo.attach( 9 ); 
+ Serial.begin(9600);
+ myservo.attach(9); 
+ delay(100);
+ myservo.write(INIT);
+ delay(100);
+ 
  /*
  - spec sheet shows 600 us to 2400 us pulse widths
  - default values (which are?) gives range about 95-98% of desired range
