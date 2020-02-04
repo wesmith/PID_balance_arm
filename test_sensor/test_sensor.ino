@@ -8,11 +8,9 @@
 
 #include "IR_sensor.h"
 
-int NMEAS = 20;  // number of measurements to average for 1 point
+int       NMEAS = 20;  // number of measurements to average for 1 point
 const int NDATA = 100; // number of points to collect for the histogram
 const int NBINS = 400; //350;
-// histogram array, just out to NBINS (note: have to reduce this if too much global mem used)
-int   hist[401] = {0}; //hist[351] = {0};
 
 const byte sensor_pin = A0;
 DistSensor sensor1(DistSensor::GP2Y0A21YK0F_5V, sensor_pin);
@@ -27,7 +25,6 @@ float stddev;
 unsigned int analog;
 unsigned int dist;
 int val = 0;
-//char txt[30];
 
 float get_dist(int n) {  // elecronoobs version, using exponential model
   long sum=0;
@@ -47,31 +44,11 @@ void waitForSerial() {
   Serial.println("");
 }
 
-/* this takes more work to get working smoothly
-void getInput() {
-  while (!Serial.available()) { }
-  char ch = Serial.read();
-  if ( ch >= '0' && ch <= '9' ) // is ch a number?
-    val = val * 10 + ch - '0'; 
-      
-  else if (ch == 10) // end of line
-  {
-    NMEAS = val;
-    //sprintf(txt, "New reads per sample %i", NMEAS);
-    //Serial.println( txt );
-    val = 0;
-  }
-}
-*/
-
-void setup() {
-  Serial.begin(9600);
-  //sensor1.print_LUT();
-}
-
-void loop() {
-
-  sensor1.get_dist(analog, dist, NMEAS);
+void histogram() {
+  
+  // histogram array out to NBINS + 1 
+  // has to be static to preserve state, uses up SRAM
+  static int hist[401] = {0};
 
   // generate histogram
   if (dist > NBINS) {dist = NBINS;}
@@ -121,4 +98,16 @@ void loop() {
     waitForSerial();
     //getInput();
   }
+}
+
+void setup() {
+  Serial.begin(9600);
+  //sensor1.print_LUT();
+}
+
+void loop() {
+
+  sensor1.get_dist(analog, dist, NMEAS);
+
+  histogram(); 
 }
