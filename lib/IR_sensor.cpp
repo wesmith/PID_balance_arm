@@ -53,14 +53,13 @@ void DistSensor::create_LUT() {
 
   for (int i = _lo_meas; i <= _hi_meas; i++) {
     for (int j = 0; j < (_num-1); j++) {
-      if ((i < _meas[j]) && (i >= _meas[j+1])) {
+      if ((i <= _meas[j]) && (i >= _meas[j+1])) {
         _LUT[i-_lo_meas] = (int)((i - _meas[j]) * (_dist[j+1] - _dist[j]) / (_meas[j+1] - _meas[j]) 
                             + _dist[j]); 
         break;
       }
     }
   }
-  _LUT[_hi_meas - _lo_meas] = _dist[0]; // outlier missed in above loop
 }
 
 void DistSensor::print_LUT() {
